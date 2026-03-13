@@ -1,7 +1,5 @@
 package com.mini.project.v2.model;
 
-import java.util.ArrayList;
-
 public class Student {
         private int id;
         private String name;
