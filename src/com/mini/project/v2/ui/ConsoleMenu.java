@@ -3,12 +3,13 @@ package com.mini.project.v2.ui;
 import com.mini.project.v2.model.Student;
 import com.mini.project.v2.service.StudentManager;
 
+import java.util.List;
 import java.util.Scanner;
 import java.util.InputMismatchException;
 
 public class ConsoleMenu {
-    private Scanner scanner = new Scanner(System.in);
-    private StudentManager studentManager = new StudentManager();
+    private final Scanner scanner = new Scanner(System.in);
+    private final StudentManager studentManager = new StudentManager();
 
     public void startMenu() {
         boolean running = true;
@@ -52,26 +53,74 @@ public class ConsoleMenu {
                         double grade = scanner.nextDouble();
                         scanner.nextLine();
 
-                        studentManager.addStudent(new Student(id, name, surname, grade));
+                        try {
+                            Student newStudent = new Student(id, name, surname, grade);
+
+                            boolean isAdded = studentManager.addStudent(newStudent);
+                            if (isAdded) {
+                                System.out.println("Başarılı: Sisteme eklendi -> " + name);
+                            } else {
+                                System.out.println("Hata: Bu ID (" + id + ") ile kayıtlı başka bir öğrenci zaten var!");
+                            }
+                        } catch (IllegalArgumentException e) {
+                            System.out.println("Doğrulama Hatası: " + e.getMessage());
+                        }
+
                         pressEnterToContinue();
                         break;
 
                     case 2:
-                        studentManager.listStudents();
+                        if (studentManager.isListEmpty()) {
+                            System.out.println("Uyarı: Sistemde silinecek öğrenci bulunmuyor!");
+                            pressEnterToContinue();
+                            break;
+                        }
 
-                        System.out.println("Silmek İstediğiniz Öğrencinin ID'si: ");
+                        displayStudents();
+                        System.out.println("Silmek İstediğiniz Öğrencinin ID'si (İptal için 0 giriniz): ");
                         int removeId = scanner.nextInt();
                         scanner.nextLine();
-                        studentManager.removeStudent(removeId);
+
+                        if (removeId == 0) {
+                            System.out.println("İşlem iptal edildi. Ana menüye dönülüyor...");
+                            pressEnterToContinue();
+                            break;
+                        }
+
+                        boolean isRemoved = studentManager.removeStudent(removeId);
+                        if (isRemoved) {
+                            System.out.println("Başarılı: Öğrenci sistemden silindi.");
+                        } else {
+                            System.out.println("Hata: " + removeId + " ID'li öğrenci bulunamadı. İşlem iptal edildi.");
+                        }
+
                         pressEnterToContinue();
                         break;
 
                     case 3:
-                        studentManager.listStudents();
+                        if (studentManager.isListEmpty()) {
+                            System.out.println("Uyarı: Sistemde güncellenecek öğrenci bulunmuyor!");
+                            pressEnterToContinue();
+                            break;
+                        }
 
-                        System.out.println("Güncellenecek Öğrencinin ID'si: ");
+                        displayStudents();
+                        System.out.println("Güncellenecek Öğrencinin ID'si (İptal için 0 giriniz): ");
                         int updateId = scanner.nextInt();
                         scanner.nextLine();
+
+                        if (updateId == 0) {
+                            System.out.println("İşlem iptal edildi. Ana menüye dönülüyor...");
+                            pressEnterToContinue();
+                            break;
+                        }
+
+                        if (!studentManager.doesStudentExist(updateId)) {
+                            System.out.println("Hata: " + updateId + " ID'li öğrenci bulunamadı! İşlem iptal edildi.");
+                            pressEnterToContinue();
+                            break;
+                        }
+
                         System.out.println("Yeni Ad: ");
                         String newName = scanner.nextLine();
                         System.out.println("Yeni Soyad: ");
@@ -79,17 +128,31 @@ public class ConsoleMenu {
                         System.out.println("Yeni Not: ");
                         double newGrade = scanner.nextDouble();
                         scanner.nextLine();
-                        studentManager.updateStudent(updateId, newName, newSurname, newGrade);
+
+                        try {
+                            boolean isUpdated = studentManager.updateStudent(updateId, newName, newSurname, newGrade);
+                            if (isUpdated) {
+                                System.out.println("Başarılı: Öğrenci bilgileri güncellendi.");
+                            }
+                        } catch (IllegalArgumentException e) {
+                            System.out.println("Doğrulama Hatası: " + e.getMessage());
+                        }
+
                         pressEnterToContinue();
                         break;
 
                     case 4:
-                        studentManager.listStudents();
+                        displayStudents();
                         pressEnterToContinue();
                         break;
 
                     case 5:
-                        studentManager.calculateAverage();
+                        if (studentManager.isListEmpty()) {
+                            System.out.println("Uyarı: Listede öğrenci olmadığı için ortalama hesaplanamaz.");
+                        } else {
+                            double avg = studentManager.calculateAverage();
+                            System.out.println("Sınıfın Not Ortalaması: " + avg);
+                        }
                         pressEnterToContinue();
                         break;
 
@@ -100,6 +163,7 @@ public class ConsoleMenu {
 
                     default:
                         System.out.println("Hatalı Giriş! Lütfen tekrar deneyin.");
+                        pressEnterToContinue();
                         break;
                 }
             } catch (InputMismatchException e) {
@@ -115,6 +179,19 @@ public class ConsoleMenu {
             }
         }
     }
+
+    private void displayStudents() {
+        List<Student> students = studentManager.getAllStudents();
+        if (students.isEmpty()) {
+            System.out.println("\nListede henüz öğrenci yok.");
+        } else {
+            System.out.println("\n--- Güncel Öğrenci Listesi ---");
+            for (Student student : students) {
+                System.out.println(student.toString());
+            }
+        }
+    }
+
     private void pressEnterToContinue() {
         System.out.println("\n➤ Devam etmek için Enter'a basın...");
         scanner.nextLine();
