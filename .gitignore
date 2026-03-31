@@ -1,6 +1,7 @@
 .idea
 *.iml
 gen
+students.txt
 
 ### IntelliJ IDEA ###
 out/
