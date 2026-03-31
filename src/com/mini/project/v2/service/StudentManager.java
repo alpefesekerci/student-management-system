@@ -8,7 +8,19 @@ import java.util.List;
 
 public class StudentManager {
 
-    private final StudentRepository repository = new StudentRepository();
+    private final StudentRepository repository;
+
+    public StudentManager(StudentRepository repository) {
+        this.repository = repository;
+    }
+
+    public void startApplication() {
+        repository.loadData();
+    }
+
+    public void stopApplication() {
+        repository.saveData();
+    }
 
     public void addStudent(int id, String name, String surname, double grade) {
         if (repository.existsById(id)) {
@@ -27,19 +39,17 @@ public class StudentManager {
     }
 
     public Student updateStudent(int id, String newName, String newSurname, double newGrade) {
-        if (!repository.existsById(id)) {
+        Student student = repository.findById(id);
+
+        if (student == null) {
             throw new StudentNotFoundException("Hata: Güncellenecek " + id + " ID'li öğrenci bulunamadı.");
         }
 
-        for (Student student : repository.findAll()) {
-            if (student.getId() == id) {
-                student.setName(newName);
-                student.setSurname(newSurname);
-                student.setGrade(newGrade);
-                return student;
-            }
-        }
-        throw new StudentNotFoundException("Hata: Beklenmeyen bir durum oluştu, öğrenci güncellenemedi.");
+        student.setName(newName);
+        student.setSurname(newSurname);
+        student.setGrade(newGrade);
+
+        return student;
     }
 
     public double calculateAverage() {
