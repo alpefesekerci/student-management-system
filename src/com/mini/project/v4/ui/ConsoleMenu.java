@@ -6,14 +6,15 @@ import com.mini.project.v4.service.StudentManager;
 
 import java.util.List;
 import java.util.Scanner;
-import java.util.InputMismatchException;
 
 public class ConsoleMenu {
     private final Scanner scanner = new Scanner(System.in);
     private final StudentManager studentManager;
+    private final ConsoleInputHelper inputHelper;
 
     public ConsoleMenu(StudentManager studentManager) {
         this.studentManager = studentManager;
+        this.inputHelper = new ConsoleInputHelper();
     }
 
     public void startMenu() {
@@ -47,19 +48,10 @@ public class ConsoleMenu {
 
                 switch (choice) {
                     case 1:
-                        System.out.println("Eklenecek Öğrencinin Okul Numarası: ");
-                        int id = scanner.nextInt();
-                        scanner.nextLine();
-
-                        System.out.println("Öğrencinin Adı: ");
-                        String name = scanner.nextLine();
-
-                        System.out.println("Öğrencinin Soyadı: ");
-                        String surname = scanner.nextLine();
-
-                        System.out.println("Öğrencinin Notu: ");
-                        double grade = scanner.nextDouble();
-                        scanner.nextLine();
+                        int id = inputHelper.readInt("Eklenecek Öğrencinin Okul Numarası: ");
+                        String name = inputHelper.readName("Öğrencinin Adı: ");
+                        String surname = inputHelper.readName("Öğrencinin Soyadı: ");
+                        double grade = inputHelper.readGrade("Öğrencinin Notu: ");
 
                         ServiceResult<Void> addResult = studentManager.addStudent(id, name, surname, grade);
                         if (addResult.isSuccess()) {
@@ -68,18 +60,20 @@ public class ConsoleMenu {
                             System.out.println("❌ " + addResult.getMessage());
                         }
 
-                        pressEnterToContinue();
+                        inputHelper.pressEnterToContinue();
                         break;
 
                     case 2:
-                       displayStudents();
-                        System.out.println("Silmek İstediğiniz Öğrencinin ID'si (İptal için 0 giriniz): ");
-                        int removeId = scanner.nextInt();
-                        scanner.nextLine();
+                       if (!displayStudents()) {
+                           inputHelper.pressEnterToContinue();
+                           break;
+                       }
+
+                        int removeId = inputHelper.readInt("Silmek İstediğiniz Öğrencinin ID'si (İptal için 0 giriniz): ");
 
                         if (removeId == 0) {
                             System.out.println("İşlem iptal edildi. Ana menüye dönülüyor...");
-                            pressEnterToContinue();
+                            inputHelper.pressEnterToContinue();
                             break;
                         }
 
@@ -90,28 +84,39 @@ public class ConsoleMenu {
                             System.out.println("❌ " + removeResult.getMessage());
                         }
 
-                        pressEnterToContinue();
+                        inputHelper.pressEnterToContinue();
                         break;
 
                     case 3:
-                        displayStudents();
-                        System.out.println("Güncellenecek Öğrencinin ID'si (İptal için 0 giriniz): ");
-                        int updateId = scanner.nextInt();
-                        scanner.nextLine();
-
-                        if (updateId == 0) {
-                            System.out.println("İşlem iptal edildi. Ana menüye dönülüyor...");
-                            pressEnterToContinue();
+                        if (!displayStudents()) {
+                            inputHelper.pressEnterToContinue();
                             break;
                         }
 
-                        System.out.println("Yeni Ad: ");
-                        String newName = scanner.nextLine();
-                        System.out.println("Yeni Soyad: ");
-                        String newSurname = scanner.nextLine();
-                        System.out.println("Yeni Not: ");
-                        double newGrade = scanner.nextDouble();
-                        scanner.nextLine();
+                        int updateId = inputHelper.readInt("Güncellenecek Öğrencinin ID'si (İptal için 0 giriniz): ");
+
+                        if (updateId == 0) {
+                            System.out.println("İşlem iptal edildi. Ana menüye dönülüyor...");
+                            inputHelper.pressEnterToContinue();
+                            break;
+                        }
+
+                        ServiceResult<Student> getResult = studentManager.getStudentById(updateId);
+
+                        if (!getResult.isSuccess()) {
+                            System.out.println("❌ " + getResult.getMessage());
+                            inputHelper.pressEnterToContinue();
+                            break;
+                        }
+
+                        Student currentStudent = getResult.getData();
+                        System.out.println("\nBulunan Öğrenci: " + currentStudent.getName() + " " + currentStudent.getSurname() + " (Mevcut Not: " + currentStudent.getGrade() + ")");
+
+
+                        String newName = inputHelper.readName("Yeni Ad: ");
+                        String newSurname = inputHelper.readName("Yeni Soyad: ");
+                        double newGrade = inputHelper.readGrade("Yeni Not: ");
+
 
                         ServiceResult<Student> updateResult = studentManager.updateStudent(updateId, newName, newSurname, newGrade);
                         if (updateResult.isSuccess()) {
@@ -120,12 +125,12 @@ public class ConsoleMenu {
                             System.out.println("❌ " + updateResult.getMessage());
                         }
 
-                        pressEnterToContinue();
+                        inputHelper.pressEnterToContinue();
                         break;
 
                     case 4:
                         displayStudents();
-                        pressEnterToContinue();
+                        inputHelper.pressEnterToContinue();
                         break;
 
                     case 5:
@@ -136,49 +141,39 @@ public class ConsoleMenu {
                             System.out.println("⚠️ Uyarı: " + avgResult.getMessage());
                         }
 
-                        pressEnterToContinue();
+                        inputHelper.pressEnterToContinue();
                         break;
 
                     case 0:
                         System.out.println("Sistemden Çıkılıyor, veriler dosyaya kaydediliyor...");
-
                         studentManager.stopApplication();
-
                         running = false;
                         break;
 
                     default:
                         System.out.println("Hatalı Giriş! Lütfen tekrar deneyin.");
-
-                        pressEnterToContinue();
+                        inputHelper.pressEnterToContinue();
                         break;
                 }
-            } catch (InputMismatchException e) {
-                System.out.println("KRİTİK HATA: Lütfen harf değil, sadece geçerli bir rakam giriniz!");
-                scanner.nextLine();
-                pressEnterToContinue();
             } catch (Exception e) {
                 System.out.println("Beklenmeyen bir hata oluştu: " + e.getMessage());
-                pressEnterToContinue();
+                inputHelper.pressEnterToContinue();
             }
         }
     }
 
-    private void displayStudents() {
+    private boolean displayStudents() {
         List<Student> students = studentManager.getAllStudents();
         if (students.isEmpty()) {
             System.out.println("\nListede henüz öğrenci yok.");
+            return false;
         } else {
             System.out.println("\n--- Güncel Öğrenci Listesi ---");
             for (Student student : students) {
                 System.out.println(student.toString());
             }
+            return true;
         }
-    }
-
-    private void pressEnterToContinue() {
-        System.out.println("\n➤ Devam etmek için Enter'a basın...");
-        scanner.nextLine();
     }
 }
 

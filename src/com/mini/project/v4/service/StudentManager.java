@@ -25,6 +25,16 @@ public class StudentManager {
         return text == null || text.trim().isEmpty() || !text.matches("^[a-zA-ZçÇğĞıİöÖşŞüÜ\\s]+$");
     }
 
+    public ServiceResult<Student> getStudentById(int id) {
+        Student student = repository.findById(id);
+
+        if (student == null) {
+            return new ServiceResult<>(false, "Hata: " + id + " ID'li öğrenci bulunamadı.");
+        }
+
+        return new ServiceResult<>(true, "Öğrenci bulundu.", student);
+    }
+
     public ServiceResult<Void> addStudent(int id, String name, String surname, double grade) {
         if (id <= 0 ) return new ServiceResult<>(false, "Hata: ID değeri 0'dan büyük pozitif bir sayı olmalıdır!");
         if (isInvalidText(name)) return new ServiceResult<>(false, "Hata: Ad alanı boş bırakılamaz, rakam veya özel karakter içeremez!");
@@ -86,4 +96,4 @@ public class StudentManager {
     public List<Student> getAllStudents() {
         return repository.findAll();
     }
-}
+    }
