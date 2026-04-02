@@ -1,8 +1,7 @@
 package com.mini.project.v4.service;
 
+import com.mini.project.v4.dto.ServiceResult;
 import com.mini.project.v4.model.Student;
-import com.mini.project.v4.exception.StudentAlreadyExistsException;
-import com.mini.project.v4.exception.StudentNotFoundException;
 import com.mini.project.v4.repository.StudentRepository;
 import java.util.List;
 
@@ -22,48 +21,66 @@ public class StudentManager {
         repository.saveData();
     }
 
-    public void addStudent(int id, String name, String surname, double grade) {
-        if (repository.existsById(id)) {
-            throw new StudentAlreadyExistsException("Servis Hatası: " + id + " ID'li öğrenci zaten sisteme kayıtlı!");
-        }
-        Student newStudent = new Student(id, name, surname, grade);
-        repository.save(newStudent);
+    private boolean isInvalidText(String text) {
+        return text == null || text.trim().isEmpty() || !text.matches("^[a-zA-ZçÇğĞıİöÖşŞüÜ\\s]+$");
     }
 
-    public void removeStudent(int id) {
+    public ServiceResult<Void> addStudent(int id, String name, String surname, double grade) {
+        if (id <= 0 ) return new ServiceResult<>(false, "Hata: ID değeri 0'dan büyük pozitif bir sayı olmalıdır!");
+        if (isInvalidText(name)) return new ServiceResult<>(false, "Hata: Ad alanı boş bırakılamaz, rakam veya özel karakter içeremez!");
+        if (isInvalidText(surname)) return new ServiceResult<>(false, "Hata: Soyad alanı boş bırakılamaz, rakam veya özel karakter içeremez!");
+        if (grade < 0 || grade > 100 ) return new ServiceResult<>(false, "Hata: Not değeri 0 ile 100 arasında olmalıdır!");
+
+        if (repository.existsById(id)) {
+            return new ServiceResult<>(false, "Servis Hatası: " + id + " ID'li öğrenci zaten sisteme kayıtlı!");
+        }
+
+        Student newStudent = new Student(id, name, surname, grade);
+        repository.save(newStudent);
+        return new ServiceResult<>(true, "Öğrenci başarıyla eklendi!");
+    }
+
+    public ServiceResult<Void> removeStudent(int id) {
         if (!repository.existsById(id)) {
-            throw new StudentNotFoundException("Hata: Silinmek istenen " + id + " ID'li öğrenci bulunamadı.");
+            return new ServiceResult<>(false, "Hata: Silinmek istenen " + id + " ID'li öğrenci bulunamadı.");
         }
 
         repository.deleteById(id);
+        return new ServiceResult<>(true, "Öğrenci başarıyla silindi!");
     }
 
-    public Student updateStudent(int id, String newName, String newSurname, double newGrade) {
+    public ServiceResult<Student> updateStudent(int id, String newName, String newSurname, double newGrade) {
         Student student = repository.findById(id);
 
         if (student == null) {
-            throw new StudentNotFoundException("Hata: Güncellenecek " + id + " ID'li öğrenci bulunamadı.");
+            return new ServiceResult<>(false, "Hata: Güncellenecek " + id + " ID'li öğrenci bulunamadı.");
         }
+
+        if (isInvalidText(newName)) return new ServiceResult<>(false, "Hata: Yeni ad geçersiz, özel karakter veya rakam içeremez!");
+        if (isInvalidText(newSurname)) return new ServiceResult<>(false, "Hata: Yeni soyad geçersiz, özel karakter veya rakam içeremez!");
+        if (newGrade < 0 || newGrade > 100) return new ServiceResult<>(false, "Hata: Yeni not değeri 0 ile 100 arasında olmalıdır!");
 
         student.setName(newName);
         student.setSurname(newSurname);
         student.setGrade(newGrade);
 
-        return student;
+        return new ServiceResult<>(true, "Başarılı: " + student.getName() + " isimli öğrencinin bilgileri güncellendi.", student);
     }
 
-    public double calculateAverage() {
+    public ServiceResult<Double> calculateAverage() {
         List<Student> students = repository.findAll();
 
         if (students.isEmpty()) {
-        throw new IllegalStateException("Listede öğrenci olmadığı için ortalama hesaplanamaz.");
+            return new ServiceResult<>(false, "Listede öğrenci olmadığı için ortalama hesaplanamaz.");
         }
 
         double total = 0;
         for (Student student : students) {
             total += student.getGrade();
         }
-        return total / students.size();
+        double average = total / students.size();
+
+        return new ServiceResult<>(true, "Ortalama hesaplandı", average);
     }
 
     public List<Student> getAllStudents() {

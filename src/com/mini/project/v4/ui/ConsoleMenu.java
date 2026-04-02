@@ -1,10 +1,8 @@
 package com.mini.project.v4.ui;
 
-import com.mini.project.v4.exception.StudentNotFoundException;
+import com.mini.project.v4.dto.ServiceResult;
 import com.mini.project.v4.model.Student;
 import com.mini.project.v4.service.StudentManager;
-import com.mini.project.v4.exception.InvalidGradeException;
-import com.mini.project.v4.exception.StudentAlreadyExistsException;
 
 import java.util.List;
 import java.util.Scanner;
@@ -12,7 +10,6 @@ import java.util.InputMismatchException;
 
 public class ConsoleMenu {
     private final Scanner scanner = new Scanner(System.in);
-
     private final StudentManager studentManager;
 
     public ConsoleMenu(StudentManager studentManager) {
@@ -64,13 +61,11 @@ public class ConsoleMenu {
                         double grade = scanner.nextDouble();
                         scanner.nextLine();
 
-                        try {
-                            studentManager.addStudent(id, name, surname, grade);
-                            System.out.println("Öğrenci başarıyla eklendi!");
-                        } catch (StudentAlreadyExistsException | IllegalArgumentException | InvalidGradeException e) {
-                            System.out.println("❌ " + e.getMessage());
-                        } catch (Exception e) {
-                            System.out.println("❌ Beklenmeyen bir hata oluştu: " + e.getMessage());
+                        ServiceResult<Void> addResult = studentManager.addStudent(id, name, surname, grade);
+                        if (addResult.isSuccess()) {
+                            System.out.println("✅ " + addResult.getMessage());
+                        } else {
+                            System.out.println("❌ " + addResult.getMessage());
                         }
 
                         pressEnterToContinue();
@@ -88,11 +83,11 @@ public class ConsoleMenu {
                             break;
                         }
 
-                        try {
-                            studentManager.removeStudent(removeId);
-                            System.out.println("Öğrenci başarıyla silindi!");
-                        } catch (StudentNotFoundException e) {
-                            System.out.println("❌ " + e.getMessage());
+                        ServiceResult<Void> removeResult = studentManager.removeStudent(removeId);
+                        if (removeResult.isSuccess()) {
+                            System.out.println("✅ " + removeResult.getMessage());
+                        } else {
+                            System.out.println("❌ " + removeResult.getMessage());
                         }
 
                         pressEnterToContinue();
@@ -118,11 +113,11 @@ public class ConsoleMenu {
                         double newGrade = scanner.nextDouble();
                         scanner.nextLine();
 
-                        try {
-                            Student updatedStudent = studentManager.updateStudent(updateId, newName, newSurname, newGrade);
-                            System.out.println("Başarılı: " + updatedStudent.getName() + " isimli öğrencinin bilgileri güncellendi.");
-                        }catch (StudentNotFoundException | InvalidGradeException e) {
-                            System.out.println("❌ İşlem Başarısız: " + e.getMessage());
+                        ServiceResult<Student> updateResult = studentManager.updateStudent(updateId, newName, newSurname, newGrade);
+                        if (updateResult.isSuccess()) {
+                            System.out.println("✅ " + updateResult.getMessage());
+                        } else {
+                            System.out.println("❌ " + updateResult.getMessage());
                         }
 
                         pressEnterToContinue();
@@ -134,12 +129,13 @@ public class ConsoleMenu {
                         break;
 
                     case 5:
-                        try {
-                            double avg = studentManager.calculateAverage();
-                            System.out.println("Sınıfın not ortalaması: " + avg);
-                        } catch (IllegalStateException e) {
-                            System.out.println("Uyarı: " + e.getMessage());
+                        ServiceResult<Double> avgResult = studentManager.calculateAverage();
+                        if (avgResult.isSuccess()) {
+                            System.out.println("Ortalama: " + avgResult.getData());
+                        } else {
+                            System.out.println("⚠️ Uyarı: " + avgResult.getMessage());
                         }
+
                         pressEnterToContinue();
                         break;
 
@@ -153,6 +149,7 @@ public class ConsoleMenu {
 
                     default:
                         System.out.println("Hatalı Giriş! Lütfen tekrar deneyin.");
+
                         pressEnterToContinue();
                         break;
                 }
