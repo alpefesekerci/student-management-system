@@ -3,15 +3,14 @@ package com.mini.project.v4.repository;
 import com.mini.project.v4.model.Student;
 import com.mini.project.v4.util.FileUtil;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
+import java.util.*;
 
 public class StudentRepository {
-    private final Map<Integer, Student> studentMap = new HashMap<>();
+    private static final String FILE_NAME = "students.txt";
 
-    public boolean existsById(int id) {
+    private final Map<String, Student> studentMap = new HashMap<>();
+
+    public boolean existsById(String id) {
         return studentMap.containsKey(id);
     }
 
@@ -19,26 +18,25 @@ public class StudentRepository {
         studentMap.put(student.getId(), student);
     }
 
-    public Student findById(int id) {
-        return studentMap.get(id);
+    public Optional<Student> findById(String id) {
+        return Optional.ofNullable(studentMap.get(id));
     }
 
     public List<Student> findAll() {
-        return new ArrayList<>(studentMap.values());
+        return Collections.unmodifiableList(new ArrayList<>(studentMap.values()));
     }
 
-    public void deleteById(int id) {
+    public void deleteById(String id) {
         studentMap.remove(id);
     }
 
     public void loadData() {
-        List<Student> loadedStudents = FileUtil.readStudentsFromFile();
+        List<Student> loadedStudents = FileUtil.readStudentsFromFile(FILE_NAME);
         loadedStudents.forEach(student -> studentMap.put(student.getId(), student));
     }
 
     public void saveData() {
-        FileUtil.writeStudentsToFile(new ArrayList<>(studentMap.values()));
-    }
+        FileUtil.writeStudentsToFile(new ArrayList<>(studentMap.values()), FILE_NAME);    }
 }
 
 

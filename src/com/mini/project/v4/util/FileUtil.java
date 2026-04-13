@@ -1,14 +1,15 @@
 package com.mini.project.v4.util;
 
 import com.mini.project.v4.model.Student;
+
 import java.io.*;
 import java.util.List;
 import java.util.ArrayList;
 
 public class FileUtil {
-    private static final String FILE_NAME = "students.txt";
+    private static final int EXPECTED_CSV_FIELDS = 4;
 
-    public static List<Student> readStudentsFromFile() {
+    public static List<Student> readStudentsFromFile(String FILE_NAME) {
         List<Student> students = new ArrayList<>();
         File file = new File(FILE_NAME);
 
@@ -16,14 +17,29 @@ public class FileUtil {
 
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
+            int lineNumber = 0;
+
             while ((line = br.readLine()) != null) {
+                lineNumber++;
+
+                if (line.trim().isEmpty()) {
+                    continue;
+                }
+
                 String[] data = line.split(",");
-                if (data.length == 4) {
-                    int id = Integer.parseInt(data[0]);
-                    String name = data[1];
-                    String surname = data[2];
-                    double grade = Double.parseDouble(data[3]);
-                    students.add(new Student(id, name, surname, grade));
+
+                if (data.length == EXPECTED_CSV_FIELDS) {
+                    try {
+                        String id = data[0].trim();
+                        String name = data[1].trim();
+                        String surname = data[2].trim();
+                        double grade = Double.parseDouble(data[3].trim());
+                        students.add(new Student(id, name, surname, grade));
+                    } catch (IllegalArgumentException e) {
+                        System.err.println("⚠️ Uyarı: " + FILE_NAME + " dosyasındaki " + lineNumber + ". satır atlandı. Sebep: " + e.getMessage());
+                    }
+                } else {
+                    System.err.println("⚠️ Uyarı: " + FILE_NAME + " dosyasındaki " + lineNumber + ". satır atlandı. Sebep: Geçersiz veri formatı (Eksik/Fazla sütun).");
                 }
             }
         } catch (IOException | NumberFormatException e) {
@@ -32,8 +48,8 @@ public class FileUtil {
         return students;
     }
 
-    public static void writeStudentsToFile(List<Student> students) {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(FILE_NAME))) {
+    public static void writeStudentsToFile(List<Student> students, String filePath) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(filePath))) {
             for (Student student : students) {
                 bw.write(student.getId() + "," + student.getName() + "," + student.getSurname() + "," + student.getGrade());
                 bw.newLine();

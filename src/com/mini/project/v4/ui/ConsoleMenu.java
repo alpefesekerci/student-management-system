@@ -48,7 +48,7 @@ public class ConsoleMenu {
 
                 switch (choice) {
                     case 1:
-                        int id = inputHelper.readInt("Eklenecek Öğrencinin Okul Numarası: ");
+                        String id = inputHelper.readString("Eklenecek Öğrencinin Okul Numarası: ");
                         String name = inputHelper.readName("Öğrencinin Adı: ");
                         String surname = inputHelper.readName("Öğrencinin Soyadı: ");
                         double grade = inputHelper.readGrade("Öğrencinin Notu: ");
@@ -64,14 +64,14 @@ public class ConsoleMenu {
                         break;
 
                     case 2:
-                       if (!displayStudents()) {
-                           inputHelper.pressEnterToContinue();
-                           break;
-                       }
+                        if (!displayStudents()) {
+                            inputHelper.pressEnterToContinue();
+                            break;
+                        }
 
-                        int removeId = inputHelper.readInt("Silmek İstediğiniz Öğrencinin ID'si (İptal için 0 giriniz): ");
+                        String removeId = inputHelper.readString("Silmek İstediğiniz Öğrencinin ID'si (İptal için 0 giriniz): ");
 
-                        if (removeId == 0) {
+                        if (removeId.equals("0")) {
                             System.out.println("İşlem iptal edildi. Ana menüye dönülüyor...");
                             inputHelper.pressEnterToContinue();
                             break;
@@ -93,9 +93,9 @@ public class ConsoleMenu {
                             break;
                         }
 
-                        int updateId = inputHelper.readInt("Güncellenecek Öğrencinin ID'si (İptal için 0 giriniz): ");
+                        String updateId = inputHelper.readString("Güncellenecek Öğrencinin ID'si (İptal için 0 giriniz): ");
 
-                        if (updateId == 0) {
+                        if (updateId.equals("0")) {
                             System.out.println("İşlem iptal edildi. Ana menüye dönülüyor...");
                             inputHelper.pressEnterToContinue();
                             break;
@@ -157,6 +157,7 @@ public class ConsoleMenu {
                 }
             } catch (Exception e) {
                 System.out.println("Beklenmeyen bir hata oluştu: " + e.getMessage());
+                scanner.nextLine();
                 inputHelper.pressEnterToContinue();
             }
         }

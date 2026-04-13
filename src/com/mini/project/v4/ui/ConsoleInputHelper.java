@@ -34,7 +34,7 @@ public class ConsoleInputHelper {
                 continue;
             }
 
-            input = input.replace(",",".");
+            input = input.replace(",", ".");
 
             try {
                 return Double.parseDouble(input);
@@ -44,12 +44,6 @@ public class ConsoleInputHelper {
         }
     }
 
-    /* * GELİŞTİRİCİ NOTU:
-     * Şu anki projede isim/soyad gibi kurallı metinler için 'readName' kullanıldığından
-     * bu metot aktif olarak kullanılmamaktadır. Ancak ileride sisteme "Adres", "Bölüm"
-     * veya "Açıklama" gibi rakam/özel karakter içerebilen serbest metin alanları
-     * eklendiğinde kullanılmak üzere genişletilebilirlik (extensibility) adına bırakılmıştır.
-     */
     public String readString(String prompt) {
         while (true) {
             System.out.print(prompt);
@@ -57,13 +51,13 @@ public class ConsoleInputHelper {
             if (value == null || value.trim().isEmpty()) {
                 System.out.println("❌ Boş giriş yapamazsınız, lütfen bir değer giriniz.");
             } else {
-                return value;
+                return value.trim();
             }
         }
     }
 
     public String readName(String prompt) {
-        while(true) {
+        while (true) {
             System.out.println(prompt);
             String value = scanner.nextLine();
 
@@ -78,13 +72,13 @@ public class ConsoleInputHelper {
     }
 
     public double readGrade(String prompt) {
-        while(true) {
+        while (true) {
             double grade = readDouble(prompt);
 
             if (grade < 0 || grade > 100) {
                 System.out.println("❌ Hatalı giriş! Not değeri 0 ile 100 arasında olmalıdır. Lütfen tekrar giriniz.");
             } else {
-                return grade ;
+                return grade;
             }
         }
     }
